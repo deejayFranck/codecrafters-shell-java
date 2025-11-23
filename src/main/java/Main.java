@@ -1,7 +1,10 @@
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        ArrayList<String> commandList = new ArrayList<>(Arrays.asList("exit", "echo", "type"));
         //Implement REPL 
         while(true){
         // TODO: Uncomment the code below to pass the first stage
@@ -13,6 +16,12 @@ public class Main {
             break;
         else if(command.startsWith("echo ")){
             System.out.println(command.substring(5));
+        }
+        else if(command.startsWith("type ")){
+            if(commandList.contains(command.substring(5)))
+                System.out.println(command + ": is a shell builtin");
+            else
+                System.out.println(command + ": not found");
         }
         else
             // Prints the "<command>: command not found" message
