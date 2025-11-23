@@ -2,6 +2,8 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        //Implement REPL 
+        while(true){
         // TODO: Uncomment the code below to pass the first stage
         System.out.print("$ ");
         // Captures the user's command in the "command" variable
@@ -9,5 +11,6 @@ public class Main {
         String command = scanner.nextLine();
         // Prints the "<command>: command not found" message
         System.out.println(command + ": command not found");
+        }
     }
 }
