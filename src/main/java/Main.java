@@ -35,6 +35,12 @@ public class Main {
           ProcessBuilder pb = new ProcessBuilder(argumentList);
           pb.redirectErrorStream(true); // Merges stderr into stdout
           Process process = pb.start();
+          // Read the output from the process
+          BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+          String line;
+          while ((line = reader.readLine()) != null) {
+              System.out.println(line);
+          }
           process.waitFor(); // Wait for the process to finish
          
         }else
