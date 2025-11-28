@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -8,7 +9,7 @@ import java.util.Scanner;
 public class Main {
 
   static ArrayList<String> buildInCommands = new ArrayList<>(
-    Arrays.asList("exit", "echo", "type")
+    Arrays.asList("exit", "echo", "type", "pwd")
   );
 
   public static void main(String[] args) throws Exception {
@@ -23,6 +24,13 @@ public class Main {
       } else if (command.startsWith("type ")) {
         String argument = command.substring(5);
         typeArgumentInfo(argument);
+      } else if (command.startsWith("pwd")) {
+        typeArgumentInfo(command);
+        String currentWorkingDirectory = Paths
+          .get("")
+          .toAbsolutePath()
+          .toString();
+        System.out.println(currentWorkingDirectory);
       } else {
         //the command isn't build in
         //Search for the command
