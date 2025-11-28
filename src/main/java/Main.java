@@ -25,7 +25,6 @@ public class Main {
         String argument = command.substring(5);
         typeArgumentInfo(argument);
       } else if (command.startsWith("pwd")) {
-        typeArgumentInfo(command);
         String currentWorkingDirectory = Paths
           .get("")
           .toAbsolutePath()
