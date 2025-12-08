@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,11 +11,13 @@ import java.util.Scanner;
 public class Main {
 
   static ArrayList<String> buildInCommands = new ArrayList<>(
-    Arrays.asList("exit", "echo", "type", "pwd")
+    Arrays.asList("exit", "echo", "type", "pwd","cd")
   );
 
   public static void main(String[] args) throws Exception {
     // Implement REPL
+
+    File currentDirectory = new File(System.getProperty("user.dir"));
     while (true) {
       System.out.print("$ ");
       // Captures the user's command in the "command" variable
@@ -30,6 +34,23 @@ public class Main {
           .toAbsolutePath()
           .toString();
         System.out.println(currentWorkingDirectory);
+      }else if(command.startsWith("cd")){
+        //Handling absolute paths
+        //Get the directory
+        String directory = command.substring(2).trim();
+
+        File newDir = new File(directory); 
+        //Check if the directory exists
+        if(newDir.exists() && newDir.isDirectory()){
+          //Change to the given directory
+          currentDirectory = newDir.getCanonicalFile();
+
+        }else{
+            System.out.println("cd: " + directory +  ": No such file or directory");
+        }
+
+
+
       } else {
         //the command isn't build in
         //Search for the command
