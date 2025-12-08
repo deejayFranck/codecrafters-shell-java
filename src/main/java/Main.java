@@ -11,17 +11,19 @@ import java.util.Scanner;
 public class Main {
 
   static ArrayList<String> buildInCommands = new ArrayList<>(
-    Arrays.asList("exit", "echo", "type", "pwd","cd")
+    Arrays.asList("exit", "echo", "type", "pwd", "cd")
   );
 
   public static void main(String[] args) throws Exception {
     // Implement REPL
 
+    // Captures the user's command in the "command" variable
+    Scanner scanner = new Scanner(System.in);
+
     File currentDirectory = new File(System.getProperty("user.dir"));
     while (true) {
       System.out.print("$ ");
-      // Captures the user's command in the "command" variable
-      Scanner scanner = new Scanner(System.in);
+
       String command = scanner.nextLine();
       if (command.equals("exit")) break; else if (command.startsWith("echo ")) {
         System.out.println(command.substring(5));
@@ -29,28 +31,22 @@ public class Main {
         String argument = command.substring(5);
         typeArgumentInfo(argument);
       } else if (command.startsWith("pwd")) {
-        String currentWorkingDirectory = Paths
-          .get("")
-          .toAbsolutePath()
-          .toString();
-        System.out.println(currentWorkingDirectory);
-      }else if(command.startsWith("cd")){
+        System.out.println(currentDirectory.getAbsolutePath());
+      } else if (command.startsWith("cd")) {
         //Handling absolute paths
         //Get the directory
         String directory = command.substring(2).trim();
 
-        File newDir = new File(directory); 
+        File newDir = new File(directory);
         //Check if the directory exists
-        if(newDir.exists() && newDir.isDirectory()){
+        if (newDir.exists() && newDir.isDirectory()) {
           //Change to the given directory
           currentDirectory = newDir.getCanonicalFile();
-
-        }else{
-            System.out.println("cd: " + directory +  ": No such file or directory");
+        } else {
+          System.out.println(
+            "cd: " + directory + ": No such file or directory"
+          );
         }
-
-
-
       } else {
         //the command isn't build in
         //Search for the command
