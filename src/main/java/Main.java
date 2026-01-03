@@ -35,7 +35,7 @@ public class Main {
             argument = argument.substring(1, argument.length() - 1);
             System.out.println(argument);
           }else{
-            String collapsedArgument = argument.replace(" +", " ");
+            String collapsedArgument = argument.replaceAll(" +", " ");
             System.out.println(collapsedArgument);
           }
 
