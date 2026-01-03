@@ -35,8 +35,8 @@ public class Main {
             argument = argument.substring(1, argument.length() - 1);
             System.out.println(argument);
           }else{
-            String insideTrimArgument = argument.replace(" ", "");
-            System.out.println(insideTrimArgument);
+            String collapsedArgument = argument.replace(" +", " ");
+            System.out.println(collapsedArgument);
           }
 
 
