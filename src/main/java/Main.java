@@ -23,18 +23,35 @@ public class Main {
       String command = scanner.nextLine();
       if (command.equals("exit")) break;
       else if (command.startsWith("echo ")) {
-        System.out.println(command.substring(5));
+          // implement support for quoting with single quotes   
+          String argument = command.substring(5);
+
+          //ignore inside empty quotes
+          while(argument.contains("''")){
+            argument = argument.replace("''", "");
+          }
+
+          if(argument.startsWith("'") && argument.endsWith("'")){
+            argument = argument.substring(1, argument.length() - 1);
+            System.out.println(argument);
+          }else{
+            String insideTrimArgument = argument.replace(" ", "");
+            System.out.println(insideTrimArgument);
+          }
+
+
+        
       } else if (command.startsWith("type ")) {
         String argument = command.substring(5);
         typeArgumentInfo(argument);
       } else if (command.startsWith("pwd")) {
         System.out.println(currentDirectory.getAbsolutePath());
       } else if (command.startsWith("cd")) {
-        // Handling absolute paths
+        // Handling absolute pathsn
         // Get the directory
         String directory = command.substring(2).trim();
 
-        if(directory.equals("~")){
+        if (directory.equals("~")) {
           currentDirectory = new File(System.getenv("HOME"));
           continue;
         }
@@ -47,7 +64,7 @@ public class Main {
           newDir = new File(directory);
         }
 
-        //Normalize path
+        // Normalize path
         newDir = newDir.getCanonicalFile();
 
         // Check if the directory exists
