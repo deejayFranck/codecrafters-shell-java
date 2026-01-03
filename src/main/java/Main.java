@@ -23,41 +23,10 @@ public class Main {
       String command = scanner.nextLine();
       if (command.equals("exit")) break;
       else if (command.startsWith("echo ")) {
-          // Lets implement support for quoting with single quotes   
-          String argument = command.substring(5);
-          StringBuilder result = new StringBuilder();
-          boolean inQuotes = false;
-          boolean lastWasSpace = false;
+        String result = parseArgumentQuotesAndSpace(command.substring(5));
+        result = result.replaceAll(",", " ");
+        System.out.println(result);
 
-        // Run through the string of characters
-        for(int i=0; i<argument.length(); i++){
-          char character = argument.charAt(i);
-          if(character == '\''){
-            inQuotes = !inQuotes;
-            continue;
-          }
-
-          if(character == ' '){
-            if(inQuotes){
-              // Preserve space inside quotes
-              result.append(character);
-            }else{
-              // Collapse consecutive spaces outside quotes
-              if(!lastWasSpace){
-                result.append(character);
-              }
-                lastWasSpace = true;
-            }
-
-          }else{
-            result.append(character);
-            lastWasSpace = false;
-          }
-
-        }
-
-        System.out.println(result.toString());
-        
       } else if (command.startsWith("type ")) {
         String argument = command.substring(5);
         typeArgumentInfo(argument);
@@ -94,7 +63,8 @@ public class Main {
       } else {
         // the command isn't build inU
         // Search for the command
-        String[] argumentList = command.split(" ");
+        String arguments = parseArgumentQuotesAndSpace(command);
+        String[] argumentList = arguments.split(",");
         File file = isFileExist(argumentList[0]);
 
         if (file != null) {
@@ -141,5 +111,41 @@ public class Main {
       }
     }
     return null;
+  }
+
+  public static String parseArgumentQuotesAndSpace(String argument) {
+
+    // Lets implement support for quoting with single quotes
+    StringBuilder result = new StringBuilder();
+    boolean inQuotes = false;
+    boolean lastWasSpace = false;
+
+    // Run through the string of characters
+    for (int i = 0; i < argument.length(); i++) {
+      char character = argument.charAt(i);
+      if (character == '\'') {
+        inQuotes = !inQuotes;
+        continue;
+      }
+
+      if (character == ' ') {
+        if (inQuotes) {
+          // Preserve space inside quotes
+          result.append(character);
+        } else {
+          // Collapse consecutive spaces outside quotes
+          if (!lastWasSpace) {
+            result.append(',');
+          }
+        }
+        lastWasSpace = true;
+
+      } else {
+        result.append(character);
+        lastWasSpace = false;
+      }
+    }
+
+    return result.toString();
   }
 }
