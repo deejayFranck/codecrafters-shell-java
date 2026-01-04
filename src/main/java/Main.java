@@ -118,18 +118,25 @@ public class Main {
     // Lets implement support for quoting with single quotes
     StringBuilder result = new StringBuilder();
     boolean inQuotes = false;
+    boolean inDoubleQuotes = false;
     boolean lastWasSpace = false;
 
     // Run through the string of characters
     for (int i = 0; i < argument.length(); i++) {
       char character = argument.charAt(i);
-      if (character == '\'') {
+
+      if(character == '"'){
+        inDoubleQuotes = !inDoubleQuotes;
+        continue;
+      }
+
+      if (character == '\'' && !inDoubleQuotes) {
         inQuotes = !inQuotes;
         continue;
       }
 
       if (character == ' ') {
-        if (inQuotes) {
+        if (inQuotes || inDoubleQuotes) {
           // Preserve space inside quotes
           result.append(character);
         } else {
