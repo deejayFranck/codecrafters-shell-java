@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -13,76 +14,77 @@ public class Main {
   public static void main(String[] args) throws Exception {
     // Implement REPL
 
-    // Captures the user's command in the "command" variable
-    Scanner scanner = new Scanner(System.in);
+    try (// Captures the user's command in the "command" variable
+    Scanner scanner = new Scanner(System.in)) {
+      File currentDirectory = new File(System.getProperty("user.dir"));
+      while (true) {
+        System.out.print("$ ");
 
-    File currentDirectory = new File(System.getProperty("user.dir"));
-    while (true) {
-      System.out.print("$ ");
+        String command = scanner.nextLine();
+        if (command.equals("exit")) break;
+        else if (command.startsWith("echo ")) {
+          String argument = command.substring(5);
+          List<String> result = parseArguments(argument);
 
-      String command = scanner.nextLine();
-      if (command.equals("exit")) break;
-      else if (command.startsWith("echo ")) {
-        String result = parseArgumentQuotesAndSpace(command.substring(5));
-        result = result.replaceAll(",", " ");
-        System.out.println(result);
+          System.out.println(String.join(" ", result.subList(0, result.size())));
 
-      } else if (command.startsWith("type ")) {
-        String argument = command.substring(5);
-        typeArgumentInfo(argument);
-      } else if (command.startsWith("pwd")) {
-        System.out.println(currentDirectory.getAbsolutePath());
-      } else if (command.startsWith("cd")) {
-        // Handling absolute pathsn
-        // Get the directory
-        String directory = command.substring(2).trim();
+        } else if (command.startsWith("type ")) {
+          String argument = command.substring(5);
+          typeArgumentInfo(argument);
+        } else if (command.startsWith("pwd")) {
+          System.out.println(currentDirectory.getAbsolutePath());
+        } else if (command.startsWith("cd")) {
+          // Handling absolute paths
+          // Get the directory
+          String directory = command.substring(2).trim();
 
-        if (directory.equals("~")) {
-          currentDirectory = new File(System.getenv("HOME"));
-          continue;
-        }
-
-        File newDir = null;
-
-        if (!directory.startsWith("/")) {
-          newDir = new File(currentDirectory.getAbsolutePath(), directory);
-        } else {
-          newDir = new File(directory);
-        }
-
-        // Normalize path
-        newDir = newDir.getCanonicalFile();
-
-        // Check if the directory exists
-        if (newDir.exists() && newDir.isDirectory()) {
-          // Change to the given directory
-          currentDirectory = newDir.getCanonicalFile();
-        } else {
-          System.out.println("cd: " + directory + ": No such file or directory");
-        }
-      } else {
-        // the command isn't build inU
-        // Search for the command
-        String arguments = parseArgumentQuotesAndSpace(command);
-        String[] argumentList = arguments.split(",");
-        File file = isFileExist(argumentList[0]);
-
-        if (file != null) {
-          ProcessBuilder pb = new ProcessBuilder(argumentList);
-          pb.directory(currentDirectory);
-          pb.redirectErrorStream(true); // Merges stderr into stdout
-          Process process = pb.start();
-          // Read the output from the process
-          BufferedReader reader =
-              new BufferedReader(new InputStreamReader(process.getInputStream()));
-          String line;
-          while ((line = reader.readLine()) != null) {
-            System.out.println(line);
+          if (directory.equals("~")) {
+            currentDirectory = new File(System.getenv("HOME"));
+            continue;
           }
-          process.waitFor(); // Wait for the process to finish
-        } else
-          System.out.println(
-              command + ": command not found"); // Prints the "<command>: command not found"
+
+          File newDir = null;
+
+          if (!directory.startsWith("/")) {
+            newDir = new File(currentDirectory.getAbsolutePath(), directory);
+          } else {
+            newDir = new File(directory);
+          }
+
+          // Normalize path
+          newDir = newDir.getCanonicalFile();
+
+          // Check if the directory exists
+          if (newDir.exists() && newDir.isDirectory()) {
+            // Change to the given directory
+            currentDirectory = newDir.getCanonicalFile();
+          } else {
+            System.out.println("cd: " + directory + ": No such file or directory");
+          }
+        } else {
+          // the command isn't build in
+          // Search for the command
+          List<String> arguments = parseArguments(command);
+
+          File file = isFileExist(arguments.get(0));
+
+          if (file != null) {
+            ProcessBuilder pb = new ProcessBuilder(arguments);
+            pb.directory(currentDirectory);
+            pb.redirectErrorStream(true); // Merges stderr into stdout
+            Process process = pb.start();
+            // Read the output from the process
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+              System.out.println(line);
+            }
+            process.waitFor(); // Wait for the process to finish
+          } else
+            System.out.println(
+                command + ": command not found"); // Prints the "<command>: command not found"
+        }
       }
     }
   }
@@ -113,46 +115,67 @@ public class Main {
     return null;
   }
 
-  public static String parseArgumentQuotesAndSpace(String argument) {
+  public static List<String> parseArguments(String argument){
 
-    // Lets implement support for quoting with single quotes
-    StringBuilder result = new StringBuilder();
-    boolean inQuotes = false;
+    List<String> args = new ArrayList<>();
+    StringBuilder current = new StringBuilder();
+    boolean inSingleQuotes = false;
     boolean inDoubleQuotes = false;
-    boolean lastWasSpace = false;
 
-    // Run through the string of characters
-    for (int i = 0; i < argument.length(); i++) {
-      char character = argument.charAt(i);
+    char character = ' ';
+    
+    for(int i = 0; i < argument.length(); i++){
 
-      if(character == '"'){
-        inDoubleQuotes = !inDoubleQuotes;
-        continue;
+    character = argument.charAt(i);
+
+    // Escape : take the next character literally
+    // invariant : You can only escape one character
+    if(character == '\\' && !inSingleQuotes && !inDoubleQuotes){
+      if(i+1 < argument.length()){
+        current.append(argument.charAt(i+1));
+        i++; // skip next character
       }
-
-      if (character == '\'' && !inDoubleQuotes) {
-        inQuotes = !inQuotes;
-        continue;
-      }
-
-      if (character == ' ') {
-        if (inQuotes || inDoubleQuotes) {
-          // Preserve space inside quotes
-          result.append(character);
-        } else {
-          // Collapse consecutive spaces outside quotes
-          if (!lastWasSpace) {
-            result.append(',');
-          }
-        }
-        lastWasSpace = true;
-
-      } else {
-        result.append(character);
-        lastWasSpace = false;
-      }
+      continue;
     }
 
-    return result.toString();
+    // Single quotes (only if not in double quotes)
+    // invariant : A single quote is never printed unless escaped or in a double quote.
+    if(character == '\'' && !inDoubleQuotes){
+      
+      inSingleQuotes = !inSingleQuotes;
+      continue;
+
+    }
+    // double quotes (only if not in single quotes)
+    if(character == '"' && !inSingleQuotes){
+
+        inDoubleQuotes = !inDoubleQuotes;
+        continue;
+
+    }
+
+    // space handling
+    // any space outside single or double quotes is collapsed
+
+    if(character == ' ' && !inSingleQuotes && !inDoubleQuotes){
+        if(current.length() > 0 ){
+          args.add(current.toString());
+          current.setLength(0);
+        }
+
+        continue;
+    }
+
+    // add any other character
+    current.append(character);
+
+    }
+
+    if(current.length() > 0){
+      args.add(current.toString());
+    }
+    
+    return args;
   }
+
 }
