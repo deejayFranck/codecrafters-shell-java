@@ -1,6 +1,7 @@
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Set;
 
@@ -66,10 +67,12 @@ public class BuiltinCommandHandler {
         Files.createFile(filePath);
       }
       if (redirection.isStdout()) {
-        Files.writeString(filePath, output);
+        Files.writeString(filePath, output + System.lineSeparator());
       } else if (redirection.isStderr()) {
         System.out.println(output);
-      }
+      } else if (redirection.isAppend()){
+		Files.writeString(filePath, output + System.lineSeparator(), StandardOpenOption.APPEND);
+	  }
     } else {
       System.out.println(output);
     }

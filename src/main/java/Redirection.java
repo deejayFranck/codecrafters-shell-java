@@ -3,7 +3,8 @@ public record Redirection(String commandPart, String target, Type type) {
   enum Type {
     NONE,
     STDOUT,
-    STDERR
+    STDERR,
+    APPEND
   }
 
   public static Redirection none(String cmd) {
@@ -18,7 +19,11 @@ public record Redirection(String commandPart, String target, Type type) {
     return type == Type.STDERR;
   }
 
+  public boolean isAppend() {
+    return type == Type.APPEND;
+  }
+
   public boolean hasRedirection(){
-    return isStdout() || isStderr();
+    return isStdout() || isStderr() || isAppend();
   }
 }
