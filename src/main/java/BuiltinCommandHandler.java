@@ -70,8 +70,11 @@ public class BuiltinCommandHandler {
         Files.writeString(filePath, output + System.lineSeparator());
       } else if (redirection.isStderr()) {
         System.out.println(output);
-      } else if (redirection.isAppend()){
+      } else if (redirection.isAppendOutput()){
 		Files.writeString(filePath, output + System.lineSeparator(), StandardOpenOption.APPEND);
+	  }
+	  else if (redirection.isAppendError()){
+		System.out.println(output);
 	  }
     } else {
       System.out.println(output);

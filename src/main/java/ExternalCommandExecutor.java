@@ -32,11 +32,18 @@ public class ExternalCommandExecutor {
           shell.getCurrentDirectory().toPath().resolve(redirection.target()),
           true);
       printStream(process.getInputStream());
-    } else if (redirection.isAppend()) {
+    } else if (redirection.isAppendOutput()) {
       writeStream(
           process.getInputStream(),
           shell.getCurrentDirectory().toPath().resolve(redirection.target()),
           true);
+      printStream(process.getErrorStream());
+    } else if (redirection.isAppendError()) {
+      writeStream(
+          process.getErrorStream(),
+          shell.getCurrentDirectory().toPath().resolve(redirection.target()),
+          true);
+      printStream(process.getInputStream());
     } else {
       printStream(process.getInputStream());
       printStream(process.getErrorStream());
@@ -56,6 +63,11 @@ public class ExternalCommandExecutor {
 
   private void writeStream(java.io.InputStream stream, Path file, boolean append) throws Exception {
     Files.createDirectories(file.getParent());
+
+    //create file even if stream is empty
+    if (Files.notExists(file)) {
+        Files.createFile(file);
+    }
 
     StandardOpenOption[] options =
         append

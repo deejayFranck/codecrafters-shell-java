@@ -4,7 +4,8 @@ public record Redirection(String commandPart, String target, Type type) {
     NONE,
     STDOUT,
     STDERR,
-    APPEND
+    APPENDOUT,
+    APPENDERR,
   }
 
   public static Redirection none(String cmd) {
@@ -19,11 +20,17 @@ public record Redirection(String commandPart, String target, Type type) {
     return type == Type.STDERR;
   }
 
-  public boolean isAppend() {
-    return type == Type.APPEND;
+  public boolean isAppendOutput() {
+    return type == Type.APPENDOUT;
   }
 
+  public boolean isAppendError(){
+    return type == Type.APPENDERR;
+  }
+
+
+
   public boolean hasRedirection(){
-    return isStdout() || isStderr() || isAppend();
+    return isStdout() || isStderr() || isAppendOutput() || isAppendError();
   }
 }
