@@ -26,6 +26,12 @@
             <artifactId>jline-terminal</artifactId>
             <version>3.29.0</version>
         </dependency>
+        <!--Comment jline-terminal-jansi before running tests-->
+        <!--<dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline-terminal-jansi</artifactId>
+            <version>3.29.0</version>
+        </dependency>-->
     </dependencies>
 
 

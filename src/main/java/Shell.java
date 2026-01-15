@@ -1,4 +1,6 @@
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
@@ -12,14 +14,17 @@ public class Shell {
 
   private File currentDirectory = new File(System.getProperty("user.dir"));
   private final CommandDispatcher dispatcher = new CommandDispatcher();
-  private BuiltinCommandHandler builtinCommandHandler = new BuiltinCommandHandler();
 
   @SuppressWarnings("ConvertToTryWithResources")
   public void run() throws Exception {
 
-    Terminal terminal = TerminalBuilder.builder().system(true).dumb(true).build();
+    Terminal terminal = TerminalBuilder.builder().system(true).systemOutput(TerminalBuilder.SystemOutput.ForcedSysOut).build();
 
-    Completer completer = new StringsCompleter(builtinCommandHandler.BUILT_INS);
+    Set<String> pathExecutables = ExecutableResolver.getExecutables();
+    Set<String> allExecutables = new HashSet<>(BuiltinCommandHandler.BUILT_INS);
+    allExecutables.addAll(pathExecutables);
+    
+    Completer completer = new StringsCompleter(allExecutables);
 
     DefaultParser parser = new DefaultParser();
     parser.setEscapeChars(new char[0]);
