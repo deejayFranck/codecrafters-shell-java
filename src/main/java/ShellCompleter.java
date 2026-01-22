@@ -12,6 +12,7 @@ class ShellCompleter implements Completer {
   private final List<String> executables;
   private boolean pending = false;
   private String lastWord = "";
+  private String lowestCommonPrefix = "";
 
   ShellCompleter(Set<String> executables) {
     this.executables = new ArrayList<>(executables);
@@ -24,9 +25,22 @@ class ShellCompleter implements Completer {
 
     List<String> matches = executables.stream().filter(e -> e.startsWith(word)).sorted().toList();
 
-    if (matches.size() <= 1) {
-      pending = false;
-      matches.forEach(m -> candidates.add(new Candidate(m)));
+    if (matches.isEmpty()) {
+      return;
+    }
+
+    var buffer = reader.getBuffer();
+
+    if (matches.size() == 1) {
+      String full = matches.get(0);
+      candidates.add(new Candidate(full, full, null, null, null, null, true));
+      return;
+    }
+
+    String lcp = longestCommonPrefix(matches);
+
+    if (lcp.length() > word.length()) {
+      candidates.add(new Candidate(lcp, lcp, null, null, null, null, false));
       return;
     }
 
@@ -50,5 +64,19 @@ class ShellCompleter implements Completer {
     reader.callWidget(LineReader.REDISPLAY);
 
     pending = false;
+  }
+
+  public String longestCommonPrefix(List<String> matches) {
+
+    String last = matches.get(matches.size() - 1);
+    String first = matches.get(0);
+
+    int i = 0;
+
+    while (i < first.length() && i < last.length() && last.charAt(i) == first.charAt(i)) {
+      i++;
+    }
+
+    return first.substring(0, i);
   }
 }
