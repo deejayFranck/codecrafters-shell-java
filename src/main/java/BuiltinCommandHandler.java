@@ -1,4 +1,7 @@
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -7,24 +10,41 @@ import java.util.Set;
 
 public class BuiltinCommandHandler {
 
-  public static final Set<String> BUILT_INS = Set.of("exit","echo", "cd", "pwd", "type");
+  public static final Set<String> BUILT_INS = Set.of("exit", "echo", "cd", "pwd", "type");
 
+  // ===== NON-PIPELINE ENTRY (unchanged behavior) =====
   public boolean handle(String input, Shell shell) throws Exception {
+    return handle(input, shell, System.in, System.out, System.err);
+  }
+
+  // ===== PIPELINE-AWARE ENTRY =====
+  public boolean handle(
+      String input, Shell shell, InputStream in, OutputStream out, OutputStream err)
+      throws Exception {
+
     String[] parts = input.split("\\s+", 2);
     String cmd = parts[0];
 
     if (!BUILT_INS.contains(cmd)) return false;
 
     switch (cmd) {
-      case "pwd" -> System.out.println(shell.getCurrentDirectory().getAbsolutePath());
-      case "cd" -> handleCd(parts.length > 1 ? parts[1] : "", shell);
-      case "type" -> handleType(parts.length > 1 ? parts[1] : "");
-      case "echo" -> handleEcho(parts.length > 1 ? parts[1] : "", shell);
+      case "pwd" -> write(out, shell.getCurrentDirectory().getAbsolutePath());
+      case "cd" -> handleCd(parts.length > 1 ? parts[1] : "", shell, err);
+      case "type" -> handleType(parts.length > 1 ? parts[1] : "", out);
+      case "echo" -> handleEcho(parts.length > 1 ? parts[1] : "", shell, out);
+      case "exit" -> System.exit(0);
     }
     return true;
   }
 
-  private void handleCd(String arg, Shell shell) throws Exception {
+  // ===== HELPERS =====
+
+  private void write(OutputStream out, String s) throws IOException {
+    out.write((s + System.lineSeparator()).getBytes());
+    out.flush();
+  }
+
+  private void handleCd(String arg, Shell shell, OutputStream err) throws Exception {
     if (arg.equals("~")) {
       shell.setCurrentDirectory(new File(System.getenv("HOME")));
       return;
@@ -35,49 +55,48 @@ public class BuiltinCommandHandler {
     target = target.getCanonicalFile();
 
     if (!target.exists() || !target.isDirectory()) {
-      System.out.println("cd: " + arg + ": No such file or directory");
+      write(err, "cd: " + arg + ": No such file or directory");
       return;
     }
 
     shell.setCurrentDirectory(target);
   }
 
-  private void handleType(String arg) {
-
+  private void handleType(String arg, OutputStream out) throws IOException {
     if (BUILT_INS.contains(arg)) {
-      System.out.println(arg + " is a shell builtin");
+      write(out, arg + " is a shell builtin");
     } else {
       File f = ExecutableResolver.find(arg);
       if (f != null) {
-        System.out.println(arg + " is " + f.getAbsolutePath());
+        write(out, arg + " is " + f.getAbsolutePath());
       } else {
-        System.out.println(arg + ": not found");
+        write(out, arg + ": not found");
       }
     }
   }
 
-  private void handleEcho(String arg, Shell shell) throws Exception {
+  private void handleEcho(String arg, Shell shell, OutputStream out) throws Exception {
     Redirection redirection = RedirectionParser.parse(arg);
     List<String> tokens = ArgumentParser.parse(redirection.commandPart());
     String output = String.join(" ", tokens);
 
     if (redirection.hasRedirection()) {
       Path filePath = shell.getCurrentDirectory().toPath().resolve(redirection.target());
-      if (Files.notExists(filePath)) {
-        Files.createFile(filePath);
-      }
-      if (redirection.isStdout()) {
+      Files.createDirectories(filePath.getParent());
+
+      if (Files.notExists(filePath)) Files.createFile(filePath);
+
+      if(redirection.isStdout()){
         Files.writeString(filePath, output + System.lineSeparator());
-      } else if (redirection.isStderr()) {
-        System.out.println(output);
-      } else if (redirection.isAppendOutput()){
-		Files.writeString(filePath, output + System.lineSeparator(), StandardOpenOption.APPEND);
-	  }
-	  else if (redirection.isAppendError()){
-		System.out.println(output);
-	  }
+
+      }else if (redirection.isStderr() || redirection.isAppendError()) {
+        write(out, output);
+      }     
+      else if (redirection.isAppendOutput()) {
+        Files.writeString(filePath, output + System.lineSeparator(), StandardOpenOption.APPEND);
+      } 
     } else {
-      System.out.println(output);
+      write(out, output);
     }
   }
 }
