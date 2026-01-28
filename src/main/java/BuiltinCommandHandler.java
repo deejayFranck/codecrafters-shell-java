@@ -10,14 +10,14 @@ import java.util.Set;
 
 public class BuiltinCommandHandler {
 
-  public static final Set<String> BUILT_INS = Set.of("exit", "echo", "cd", "pwd", "type");
+  public static final Set<String> BUILT_INS = Set.of("exit", "echo", "cd", "pwd", "type", "history");
 
-  // ===== NON-PIPELINE ENTRY (unchanged behavior) =====
+  // NON-PIPELINE ENTRY (unchanged behavior)
   public boolean handle(String input, Shell shell) throws Exception {
     return handle(input, shell, System.in, System.out, System.err);
   }
 
-  // ===== PIPELINE-AWARE ENTRY =====
+  // PIPELINE-AWARE ENTRY
   public boolean handle(
       String input, Shell shell, InputStream in, OutputStream out, OutputStream err)
       throws Exception {
@@ -37,7 +37,7 @@ public class BuiltinCommandHandler {
     return true;
   }
 
-  // ===== HELPERS =====
+  // HELPERS 
 
   private void write(OutputStream out, String s) throws IOException {
     out.write((s + System.lineSeparator()).getBytes());
